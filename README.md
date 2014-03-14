@@ -4,7 +4,7 @@ a script to manage several ROS workspaces
 ## Usage
 ### register a existing workspace
 ```sh
-rosenv register <nickname> <directory> <distro> [-m comment] [-y]
+rosenv register <nickname> <directory> <distro>
 ```
 
 ### switch workspaces
@@ -21,5 +21,5 @@ rosenv update [--env <nickname>]
 
 ### install workspace
 ```sh
-rosenv install <nickname> <path> <rosinstall> [<rosinstall> <rosinstall> ...] [-m <comment>]
+rosenv install <nickname> <path> <rosinstall> [<rosinstall> <rosinstall> ...]
 ```

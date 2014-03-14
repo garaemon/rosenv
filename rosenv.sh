@@ -170,6 +170,7 @@ EOF
                         source $ws_path/devel/setup.`basename $SHELL`
                     fi
                     export ROSENV_CURRENT=$nickname
+                    export ROS_WORKSPACE=$ws_path
                 else
                     # rosbuild
                     echo switching to $nickname

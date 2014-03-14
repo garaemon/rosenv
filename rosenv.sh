@@ -113,6 +113,15 @@ fs.writeFileSync("$ROSENV_DIR/config.json", JSON.stringify(config, null, 4) + '\
 }
 EOF
             ;;
+        "is-catkin")
+            local ws_path
+            local nickname
+            nickname=$2
+            ws_path=$(rosenv get-path $nickname)
+            if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
+                echo yes
+            fi
+            ;;
         "use")
             local nickname
             local develp
@@ -151,6 +160,23 @@ EOF
                     export ROSENV_CURRENT=$nickname
                 fi
                         
+            fi
+            ;;
+        "update")
+            local nickname
+            nickname=$ROSENV_CURRENT
+            shift               # dispose 'update' argument
+            while [ $# -gt 0 ]; do
+                case "$1" in 
+                    "--env") nickname=$2; shift;;
+                    *) ;;
+                esac
+                shift
+            done
+            if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
+                (cd $(rosenv get-path $nickname)/src && wstool update);
+            else
+                (cd $(rosenv get-path $nickname) && rosws update);
             fi
             ;;
     esac

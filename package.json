@@ -2,7 +2,7 @@
   "name": "rosenv",
   "version": "0.0.0",
   "description": "several utilities for ROS",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "bin": {
     "rosenv": "bin/rosenv"
   },

@@ -1,5 +1,5 @@
 {
-  "name": "rosutils",
+  "name": "rosenv",
   "version": "0.0.0",
   "description": "several utilities for ROS",
   "main": "index.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/garaemon/rosutils.git"
+    "url": "git://github.com/garaemon/rosenv.git"
   },
   "keywords": [
     "ros"
@@ -19,7 +19,7 @@
   "author": "Ryohei Ueda",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/garaemon/rosutils/issues"
+    "url": "https://github.com/garaemon/rosenv/issues"
   },
   "devDependencies": {
     "grunt-contrib-concat": "~0.3.0",

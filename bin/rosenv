@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+// -*- mode: javascript -*-
+var rosenv = require('../lib/rosenv');
+rosenv.main();

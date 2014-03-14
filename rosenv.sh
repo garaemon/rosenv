@@ -52,7 +52,12 @@ var util = require('util');
 if (fs.existsSync("$ROSENV_DIR/config.json")) {
   config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
   for (var key in config) {
-    console.log(util.format('  %s (%s) %s', key, config[key].version, config[key].path));
+    if (key.toString() == "$ROSENV_CURRENT".toString()) {
+      console.log(util.format('* %s (%s) %s', key, config[key].version, config[key].path));
+    }
+    else {
+      console.log(util.format('  %s (%s) %s', key, config[key].version, config[key].path));
+    }
   }
 }
 else {
@@ -61,14 +66,26 @@ else {
 EOF
             ;;
         "list-nicknames")       # internal command
+            local onelinep
+            if [ "$1" = "--oneline" ]; then
+                onelinep=true
+            else
+                onelinep=false
+            fi
             node <<EOF
 var path = require('path');
 var fs = require('fs');
 if (fs.existsSync("$ROSENV_DIR/config.json")) {
   config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
-  for (var key in config) {
-    console.log(key);
+  var split = ' ';
+  if ($onelinep) {
+    split = '\n';
   }
+  var strs = [];
+  for (var key in config) {
+    strs.push(key);
+  }
+  console.log(strs.join(split));
 }
 EOF
             ;;
@@ -180,6 +197,39 @@ EOF
             fi
             ;;
     esac
-
-
 }
+
+# completion
+if [ $(basename $SHELL) = "zsh" ]; then
+    _rosenv() {
+        local _1st_arguments
+        _1st_arguments=(
+            "help":"show help"
+            "register":"register a workspace"
+            "list":"list of the workspaces"
+            "list-nicknames":"only list up the nicknames of the workspaces"
+            "get-path":"get the path to the workspace"
+            "get-version":"get the ROS distro version of the workspace"
+            "remove":"remove the workspace"
+            "is-catkin":"return yes if the workspace is catkin"
+            "use":"switch the workspace"
+        )
+        _arguments '*:: :->command'
+        if ((CURRENT == 1)); then
+            _describe -t commands "rosenv commands" _1st_arguments;
+            return
+        fi
+        local _command_args
+        case "$words[1]" in
+            "get-path" | "get-version")
+                _command_args=$(rosenv list-nicknames)
+                ;;
+            "use")
+                _command_args="$(rosenv list-nicknames) --install --devel"
+                ;;
+        esac
+        _values "args" \
+            `echo $_command_args` # to split
+    }
+    compdef _rosenv rosenv
+fi

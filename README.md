@@ -1,6 +1,11 @@
 # rosenv
 a script to manage several ROS workspaces
 
+## Install
+```sh
+curl https://raw.github.com/garaemon/rosenv/master/install.sh | bash
+```
+
 ## Usage
 ### register a existing workspace
 ```sh

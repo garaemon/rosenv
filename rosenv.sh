@@ -183,18 +183,13 @@ EOF
         "update")
             local nickname
             nickname=$ROSENV_CURRENT
-            shift               # dispose 'update' argument
-            while [ $# -gt 0 ]; do
-                case "$1" in 
-                    "--env") nickname=$2; shift;;
-                    *) ;;
-                esac
-                shift
-            done
+            if [ $# = 2 ]; then
+                nickname=$2
+            fi
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && wstool update);
+                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update);
             else
-                (cd $(rosenv get-path $nickname) && rosws update);
+                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update);
             fi
             ;;
     esac
@@ -214,6 +209,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "remove":"remove the workspace"
             "is-catkin":"return yes if the workspace is catkin"
             "use":"switch the workspace"
+            "update":"update the workspace"
         )
         _arguments '*:: :->command'
         if ((CURRENT == 1)); then
@@ -222,7 +218,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
         fi
         local _command_args
         case "$words[1]" in
-            "get-path" | "get-version")
+            "get-path" | "get-version" | "update")
                 _command_args=$(rosenv list-nicknames)
                 ;;
             "use")

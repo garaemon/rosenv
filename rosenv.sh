@@ -13,7 +13,7 @@ rosenv() {
             echo "ROS Environment Manager"
             ;;
         "register" | "add")
-            # nickname path version [-m option]
+            # nickname path version
             if [ $# -lt 4 ]; then
                 rosenv help
                 return
@@ -21,7 +21,6 @@ rosenv() {
             local nickname
             local ws_path
             local version
-            local comment
             nickname=$2
             ws_path=$3
             version=$4
@@ -223,20 +222,21 @@ EOF
                 shift
             done
             mkdir -p $directory
-            (cd $directory && $wstool init)
-            if [ $wstool = rosws ]; then
-                (cd $directory && $wstool merge /opt/ros/$distro/.rosinstall)
+            (cd $directory && $wscmd init)
+            if [ $wscmd = rosws ]; then
+                (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
                 if [ -e $rosinstall_file ]; then
                     local abspath
                     abspath=$(cd $(dirname $rosinstall_file) && pwd)/$(basename $rosinstall_file)
-                    (cd $directory && $wstool merge $abspath)
+                    (cd $directory && $wscmd merge file://$abspath)
                 else
-                    (cd $directory && $wstool merge $rosinstall_file)
+                    (cd $directory && $wscmd merge $rosinstall_file)
                 fi
             done
+            rosenv register $nickname $directory $distro
             ;;
     esac
 }

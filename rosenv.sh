@@ -305,15 +305,24 @@ if [ $(basename $SHELL) = "zsh" ]; then
         fi
         local _command_args
         case "$words[1]" in
+            "register")
+                if ((CURRENT == 1)); then
+                    _command_args=""
+                    _values "args" `echo $_command_args`
+                elif ((CURRENT == 2)); then
+                    _files
+                fi
+                ;;
             "get-path" | "get-version" | "update")
                 _command_args=$(rosenv list-nicknames)
+                _values "args" `echo $_command_args`
                 ;;
             "use")
                 _command_args="$(rosenv list-nicknames) --install --devel"
+                _values "args" `echo $_command_args`
                 ;;
         esac
-        _values "args" \
-            `echo $_command_args` # to split
+        
     }
     compdef _rosenv rosenv
 fi

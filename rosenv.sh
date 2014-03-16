@@ -11,6 +11,47 @@ rosenv() {
         "help")
             echo
             echo "ROS Environment Manager"
+            echo
+            echo "Usage:"
+            echo "    rosenv help"
+            echo "       Show this message"
+            echo "    rosenv register|add <nickname> <path> <distro>"
+            echo "       Register an existing ros workspace."
+            echo "    rosenv remove|rm|unregister <nickname>"
+            echo "       Remove a workspace from rosenv."
+            echo "    rosenv list"
+            echo "       List all the workspaces"
+            echo "    rosenv use <nickname> [--devel|--install]"
+            echo "       Switch to the workspace specifid by the nickname."
+            echo "       If that environment is catkin workspace, you can"
+            echo "       sppecify which setup file to use devel or install."
+            echo "    rosenv use --install"
+            echo "       Use install setup script with the current workspace."
+            echo "    rosenv use --devel"
+            echo "       Use devel setup script with the current workspace."
+            echo "    rosenv update [--env <nickname>] [-jJOB_NUM]"
+            echo "       Run \`rosws update\` or \`wstool update\` on the"
+            echo "       current workspace. You can specify other workspace by"
+            echo "       --env option."
+            echo "    rosenv install <nickname> <path> <distro> \
+<rosinstall-file> [<rosinstall-file> <rosinstall-file> ...]"
+            echo "       Checkout several repositories speicfied by the"
+            echo "       rosinstall files and register that workspace to rosenv."
+            echo "    rosenv get-version <nickname>"
+            echo "       Show the version of the workspace"
+            echo "    rosenv get-path <nickname>"
+            echo "       Get the path of the workspace"
+            echo "    rosenv list-nicknames"
+            echo "       List all the workspaces in oneline format"
+            echo "    rosenv is-catkin <nickname>"
+            echo "       return yes if the workspace is catkin workspace."
+            echo
+            echo "Example:"
+            echo "    rosenv install jsk.hydro ~/ros/hydro hydro https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
+            echo "    rosenv install jsk.groovy ~/ros/groovy groovy https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
+            echo "    rosenv update --env jsk.hydro"
+            echo "    rosenv update --env jsk.groovy"
+            echo "    rosenv use jsk.hydro"
             ;;
         "register" | "add")
             # nickname path version
@@ -116,7 +157,7 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
 }
 EOF
             ;;
-        "rm" | "remove")
+        "rm" | "remove" | "unregister")
             local nickname
             nickname=$2
             node <<EOF

@@ -26,5 +26,5 @@ rosenv update [<nickname>]
 
 ### install workspace
 ```sh
-rosenv install <nickname> <path> <rosinstall> [<rosinstall> <rosinstall> ...]
+rosenv install <nickname> <path> <rosinstall> [<rosinstall> <rosinstall> ...] [--rosbuild]
 ```

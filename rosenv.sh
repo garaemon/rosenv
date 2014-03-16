@@ -181,16 +181,62 @@ EOF
             fi
             ;;
         "update")
+            # update [nickname]
             local nickname
-            nickname=$ROSENV_CURRENT
+            
             if [ $# = 2 ]; then
                 nickname=$2
+            elif [ $# = 1 ]; then
+                nickname=$ROSENV_CURRENT
+            else
+                rosenv help
+                return 1
             fi
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
                 (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update);
             else
                 (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update);
             fi
+            ;;
+        "install")
+            # install nickname path distro rosinstall-file [rosinstall-file2 rosinstall-file3 ...]
+            # parse argument
+            local nickname
+            local directory
+            local rosinstall_files
+            local distro
+            local wscmd
+            wscmd=wstool
+            if [ $# -lt 5 ]; then
+                rosenv help
+                return 1
+            fi
+            nickname=$2
+            directory=$3
+            distro=$4
+            shift; shift; shift; shift;
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    "--rosbuild") wstool=rosws;;
+                    *) rosinstall_files="$1 $rosinstall_files";;
+                esac
+                shift
+            done
+            mkdir -p $directory
+            (cd $directory && $wstool init)
+            if [ $wstool = rosws ]; then
+                (cd $directory && $wstool merge /opt/ros/$distro/.rosinstall)
+            fi
+            for rosinstall_file in `echo $rosinstall_files`
+            do
+                if [ -e $rosinstall_file ]; then
+                    local abspath
+                    abspath=$(cd $(dirname $rosinstall_file) && pwd)/$(basename $rosinstall_file)
+                    (cd $directory && $wstool merge $abspath)
+                else
+                    (cd $directory && $wstool merge $rosinstall_file)
+                fi
+            done
             ;;
     esac
 }

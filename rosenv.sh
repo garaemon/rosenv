@@ -230,7 +230,6 @@ EOF
                 source $sh_path
                 export ROSENV_CURRENT=$nickname
                 export ROS_WORKSPACE=$ws_path
-                        
             fi
             ;;
         "update")

@@ -22,7 +22,7 @@ rosenv use --install
 
 ### update worksapce
 ```sh
-rosenv update [<nickname>]
+rosenv update [<nickname>] [-jJOB_NUM]
 ```
 
 ### install workspace

@@ -29,7 +29,7 @@ rosenv() {
             echo "       Use install setup script with the current workspace."
             echo "    rosenv use --devel"
             echo "       Use devel setup script with the current workspace."
-            echo "    rosenv update [--env <nickname>] [-jJOB_NUM]"
+            echo "    rosenv update [<nickname>] [-jJOB_NUM]"
             echo "       Run \`rosws update\` or \`wstool update\` on the"
             echo "       current workspace. You can specify other workspace by"
             echo "       --env option."
@@ -42,9 +42,11 @@ rosenv() {
             echo "    rosenv get-path <nickname>"
             echo "       Get the path of the workspace"
             echo "    rosenv list-nicknames"
-            echo "       List all the workspaces in oneline format"
+            echo "       List all the workspaces's nickname"
             echo "    rosenv is-catkin <nickname>"
             echo "       return yes if the workspace is catkin workspace."
+            echo "    rosenv distros"
+            echo "       return a list of distribution supported by rosenv"
             echo
             echo "Example:"
             echo "    rosenv install jsk.hydro ~/ros/hydro hydro https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
@@ -52,6 +54,9 @@ rosenv() {
             echo "    rosenv update --env jsk.hydro"
             echo "    rosenv update --env jsk.groovy"
             echo "    rosenv use jsk.hydro"
+            ;;
+        "distros")              # internal API
+            echo "groovy hydro indigo"
             ;;
         "register" | "add")
             # nickname path version
@@ -223,19 +228,24 @@ EOF
         "update")
             # update [nickname]
             local nickname
-            
-            if [ $# = 2 ]; then
-                nickname=$2
-            elif [ $# = 1 ]; then
-                nickname=$ROSENV_CURRENT
-            else
+            local pjobs
+            if [ $# != 2 -a $# != 3 ]; then
                 rosenv help
-                return 1
+                return 2
             fi
+            shift               # dispose 'update'
+            nickname=$ROSENV_CURRENT
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    -j*) pjobs=$1;;
+                    *) nickname=$1
+                esac
+                shift
+            done
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update);
+                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs);
             else
-                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update);
+                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs);
             fi
             ;;
         "install")
@@ -305,22 +315,32 @@ if [ $(basename $SHELL) = "zsh" ]; then
         fi
         local _command_args
         case "$words[1]" in
-            "register")
-                if ((CURRENT == 1)); then
-                    _command_args=""
-                    _values "args" `echo $_command_args`
-                elif ((CURRENT == 2)); then
+            "register" | "add")
+                if ((CURRENT == 3)); then
                     _files
+                elif ((CURRENT == 4)); then
+                    _values "distros" $(rosenv distros)
                 fi
+                ;;
+            "remove" | "rm" | "unregister")
+                if ((CURRENT == 2)); then
+                    _values "workspaces" $(rosenv list-nicknames)
+                fi
+                ;;
+            "list")
+                # do nothing
+                ;;
+            "use")
+                _values "workspaces" $(rosenv list-nicknames) --install --devel
+                ;;
+            "update")
+                _values "workspaces" $(rosenv list-nicknames)
                 ;;
             "get-path" | "get-version" | "update")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;
-            "use")
-                _command_args="$(rosenv list-nicknames) --install --devel"
-                _values "args" `echo $_command_args`
-                ;;
+            
         esac
         
     }

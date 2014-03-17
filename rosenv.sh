@@ -296,6 +296,10 @@ EOF
             done
             rosenv register $nickname $directory $distro
             ;;
+        *)
+            rosenv help
+            return 3
+            ;;
     esac
 }
 

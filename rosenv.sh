@@ -219,7 +219,7 @@ EOF
                 else
                     # rosbuild
                     echo switching to $nickname "(rosbuild)"
-                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
+                    sh_path=$ws_path/setup.`basename $SHELL`
                 fi
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
@@ -378,8 +378,8 @@ catmake() {
 
 function _catmake() {
     local options
-    options="install test clean -h -C --source --build --force-cmake --no-color --pkg \
---only-pkg-with-deps --cmake-args --make-args \
+    options="install test clean -h -C --source --build --force-cmake --no-color \
+--pkg --only-pkg-with-deps --cmake-args --make-args \
 `rospack list | cut -f1 -d' '`"
     reply=(${=options})
 }

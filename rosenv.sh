@@ -226,7 +226,7 @@ EOF
             fi
             ;;
         "update")
-            # update [nickname]
+            # update [nickname] [-jJOB_NUM]
             local nickname
             local pjobs
             if [ $# != 2 -a $# != 3 ]; then
@@ -336,7 +336,16 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "update")
                 _values "workspaces" $(rosenv list-nicknames)
                 ;;
-            "get-path" | "get-version" | "update")
+            "install")
+                if ((CURRENT == 3)); then
+                    _files
+                elif ((CURRENT == 4)); then
+                    _values "distro" $(rosenv distros)
+                elif ((CURRENT != 2)); then
+                    _files
+                fi
+                ;;
+            "get-path" | "get-version")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;

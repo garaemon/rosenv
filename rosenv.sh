@@ -11,9 +11,55 @@ rosenv() {
         "help")
             echo
             echo "ROS Environment Manager"
+            echo
+            echo "Usage:"
+            echo "    rosenv help"
+            echo "       Show this message"
+            echo "    rosenv register|add <nickname> <path> <distro>"
+            echo "       Register an existing ros workspace."
+            echo "    rosenv remove|rm|unregister <nickname>"
+            echo "       Remove a workspace from rosenv."
+            echo "    rosenv list"
+            echo "       List all the workspaces"
+            echo "    rosenv use <nickname> [--devel|--install]"
+            echo "       Switch to the workspace specifid by the nickname."
+            echo "       If that environment is catkin workspace, you can"
+            echo "       sppecify which setup file to use devel or install."
+            echo "    rosenv use --install"
+            echo "       Use install setup script with the current workspace."
+            echo "    rosenv use --devel"
+            echo "       Use devel setup script with the current workspace."
+            echo "    rosenv update [<nickname>] [-jJOB_NUM]"
+            echo "       Run \`rosws update\` or \`wstool update\` on the"
+            echo "       current workspace. You can specify other workspace"
+            echo "       <nickname>."
+            echo "    rosenv install <nickname> <path> <distro> \
+<rosinstall-file> [<rosinstall-file> <rosinstall-file> ...]"
+            echo "       Checkout several repositories speicfied by the"
+            echo "       rosinstall files and register that workspace to rosenv."
+            echo "    rosenv get-version <nickname>"
+            echo "       Show the version of the workspace"
+            echo "    rosenv get-path <nickname>"
+            echo "       Get the path of the workspace"
+            echo "    rosenv list-nicknames"
+            echo "       List all the workspaces's nickname"
+            echo "    rosenv is-catkin <nickname>"
+            echo "       return yes if the workspace is catkin workspace."
+            echo "    rosenv distros"
+            echo "       return a list of distribution supported by rosenv"
+            echo
+            echo "Example:"
+            echo "    rosenv install jsk.hydro ~/ros/hydro hydro https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
+            echo "    rosenv install jsk.groovy ~/ros/groovy groovy https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
+            echo "    rosenv update jsk.hydro"
+            echo "    rosenv update jsk.groovy"
+            echo "    rosenv use jsk.hydro"
+            ;;
+        "distros")              # internal API
+            echo "groovy hydro indigo"
             ;;
         "register" | "add")
-            # nickname path version [-m option]
+            # nickname path version
             if [ $# -lt 4 ]; then
                 rosenv help
                 return
@@ -21,7 +67,6 @@ rosenv() {
             local nickname
             local ws_path
             local version
-            local comment
             nickname=$2
             ws_path=$3
             version=$4
@@ -117,7 +162,7 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
 }
 EOF
             ;;
-        "rm" | "remove")
+        "rm" | "remove" | "unregister")
             local nickname
             nickname=$2
             node <<EOF
@@ -159,43 +204,55 @@ EOF
                 return 1
             else
                 local ws_path
+                local sh_path
                 ws_path=$(rosenv get-path $nickname)
                 if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
                     # catkin
+                    
                     if [ "$installp" = "true" ]; then
-                        echo switching to $nickname:install
-                        source $ws_path/install/setup.`basename $SHELL`
+                        echo switching to $nickname:install "(catkin)"
+                        sh_path=$ws_path/install/setup.`basename $SHELL`
                     else
-                        echo switching to $nickname:devel
-                        source $ws_path/devel/setup.`basename $SHELL`
+                        echo switching to $nickname:devel "(catkin)"
+                        sh_path=$ws_path/devel/setup.`basename $SHELL`
                     fi
-                    export ROSENV_CURRENT=$nickname
-                    export ROS_WORKSPACE=$ws_path
                 else
                     # rosbuild
-                    echo switching to $nickname
-                    source $ws_path/setup.`basename $SHELL`
-                    export ROSENV_CURRENT=$nickname
+                    echo switching to $nickname "(rosbuild)"
+                    sh_path=$ws_path/setup.`basename $SHELL`
                 fi
-                        
+                if [ ! -e "$sh_path" ]; then
+                    echo "$sh_path is not yet available. \
+(not yet catkin_make is called?)"
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
+                    echo "automatically source "
+                fi
+                source $sh_path
+                export ROSENV_CURRENT=$nickname
+                export ROS_WORKSPACE=$ws_path
             fi
             ;;
         "update")
-            # update [nickname]
+            # update [nickname] [-jJOB_NUM]
             local nickname
-            
-            if [ $# = 2 ]; then
-                nickname=$2
-            elif [ $# = 1 ]; then
-                nickname=$ROSENV_CURRENT
-            else
+            local pjobs
+            if [ $# != 1 -a $# != 2 -a $# != 3 ]; then
                 rosenv help
-                return 1
+                return 2
             fi
+            shift               # dispose 'update'
+            nickname=$ROSENV_CURRENT
+            while [ $# -gt 0 ]; do
+                case "$1" in
+                    -j*) pjobs=$1;;
+                    *) nickname=$1
+                esac
+                shift
+            done
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update);
+                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs);
             else
-                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update);
+                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs);
             fi
             ;;
         "install")
@@ -223,20 +280,25 @@ EOF
                 shift
             done
             mkdir -p $directory
-            (cd $directory && $wstool init)
-            if [ $wstool = rosws ]; then
-                (cd $directory && $wstool merge /opt/ros/$distro/.rosinstall)
+            (cd $directory && $wscmd init)
+            if [ $wscmd = rosws ]; then
+                (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
                 if [ -e $rosinstall_file ]; then
                     local abspath
                     abspath=$(cd $(dirname $rosinstall_file) && pwd)/$(basename $rosinstall_file)
-                    (cd $directory && $wstool merge $abspath)
+                    (cd $directory && $wscmd merge file://$abspath)
                 else
-                    (cd $directory && $wstool merge $rosinstall_file)
+                    (cd $directory && $wscmd merge $rosinstall_file)
                 fi
             done
+            rosenv register $nickname $directory $distro
+            ;;
+        *)
+            rosenv help
+            return 3
             ;;
     esac
 }
@@ -257,22 +319,70 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "use":"switch the workspace"
             "update":"update the workspace"
         )
-        _arguments '*:: :->command'
+        _arguments '*:: :->ocommand'
         if ((CURRENT == 1)); then
             _describe -t commands "rosenv commands" _1st_arguments;
             return
         fi
-        local _command_args
         case "$words[1]" in
-            "get-path" | "get-version" | "update")
-                _command_args=$(rosenv list-nicknames)
+            "register" | "add")
+                if ((CURRENT == 3)); then
+                    _files
+                elif ((CURRENT == 4)); then
+                    _values "distros" $(rosenv distros)
+                fi
+                ;;
+            "remove" | "rm" | "unregister")
+                if ((CURRENT == 2)); then
+                    _values "workspaces" $(rosenv list-nicknames)
+                fi
+                ;;
+            "list")
+                # do nothing
                 ;;
             "use")
-                _command_args="$(rosenv list-nicknames) --install --devel"
+                _values "workspaces" $(rosenv list-nicknames) --install --devel
                 ;;
+            "update")
+                _values "workspaces" $(rosenv list-nicknames)
+                ;;
+            "install")
+                if ((CURRENT == 3)); then
+                    _files
+                elif ((CURRENT == 4)); then
+                    _values "distro" $(rosenv distros)
+                elif ((CURRENT != 2)); then
+                    _files
+                fi
+                ;;
+            "get-path" | "get-version")
+                _command_args=$(rosenv list-nicknames)
+                _values "args" `echo $_command_args`
+                ;;
+            
         esac
-        _values "args" \
-            `echo $_command_args` # to split
+        
     }
     compdef _rosenv rosenv
 fi
+
+catmake() {
+    local catkin_pkg
+    if [ -e package.xml ]; then
+        catkin_pkg=`basename $PWD`
+        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
+    else
+        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@)
+    fi
+}
+
+function _catmake() {
+    local options
+    options="install test clean -h -C --source --build --force-cmake --no-color \
+--pkg --only-pkg-with-deps --cmake-args --make-args \
+`rospack list | cut -f1 -d' '`"
+    reply=(${=options})
+}
+
+compctl -K "_catmake" "catmake"
+

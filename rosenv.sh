@@ -236,7 +236,7 @@ EOF
             # update [nickname] [-jJOB_NUM]
             local nickname
             local pjobs
-            if [ $# != 2 -a $# != 3 ]; then
+            if [ $# != 1 -a $# != 2 -a $# != 3 ]; then
                 rosenv help
                 return 2
             fi
@@ -319,12 +319,11 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "use":"switch the workspace"
             "update":"update the workspace"
         )
-        _arguments '*:: :->command'
+        _arguments '*:: :->ocommand'
         if ((CURRENT == 1)); then
             _describe -t commands "rosenv commands" _1st_arguments;
             return
         fi
-        local _command_args
         case "$words[1]" in
             "register" | "add")
                 if ((CURRENT == 3)); then

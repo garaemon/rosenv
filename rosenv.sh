@@ -31,8 +31,8 @@ rosenv() {
             echo "       Use devel setup script with the current workspace."
             echo "    rosenv update [<nickname>] [-jJOB_NUM]"
             echo "       Run \`rosws update\` or \`wstool update\` on the"
-            echo "       current workspace. You can specify other workspace by"
-            echo "       --env option."
+            echo "       current workspace. You can specify other workspace"
+            echo "       <nickname>."
             echo "    rosenv install <nickname> <path> <distro> \
 <rosinstall-file> [<rosinstall-file> <rosinstall-file> ...]"
             echo "       Checkout several repositories speicfied by the"
@@ -51,8 +51,8 @@ rosenv() {
             echo "Example:"
             echo "    rosenv install jsk.hydro ~/ros/hydro hydro https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
             echo "    rosenv install jsk.groovy ~/ros/groovy groovy https://raw.github.com/jsk-ros-pkg/jsk_common/master/jsk.rosinstall"
-            echo "    rosenv update --env jsk.hydro"
-            echo "    rosenv update --env jsk.groovy"
+            echo "    rosenv update jsk.hydro"
+            echo "    rosenv update jsk.groovy"
             echo "    rosenv use jsk.hydro"
             ;;
         "distros")              # internal API

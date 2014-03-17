@@ -204,24 +204,32 @@ EOF
                 return 1
             else
                 local ws_path
+                local sh_path
                 ws_path=$(rosenv get-path $nickname)
                 if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
                     # catkin
+                    
                     if [ "$installp" = "true" ]; then
-                        echo switching to $nickname:install
-                        source $ws_path/install/setup.`basename $SHELL`
+                        echo switching to $nickname:install "(catkin)"
+                        sh_path=$ws_path/install/setup.`basename $SHELL`
                     else
-                        echo switching to $nickname:devel
-                        source $ws_path/devel/setup.`basename $SHELL`
+                        echo switching to $nickname:devel "(catkin)"
+                        sh_path=$ws_path/devel/setup.`basename $SHELL`
                     fi
-                    export ROSENV_CURRENT=$nickname
-                    export ROS_WORKSPACE=$ws_path
                 else
                     # rosbuild
-                    echo switching to $nickname
-                    source $ws_path/setup.`basename $SHELL`
-                    export ROSENV_CURRENT=$nickname
+                    echo switching to $nickname "(rosbuild)"
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
                 fi
+                if [ -f "$sh_path" ]; then
+                    echo "$sh_path is not yet available. \
+(not yet catkin_make is called?)"
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
+                    echo "automatically source "
+                fi
+                source $sh_path
+                export ROSENV_CURRENT=$nickname
+                export ROS_WORKSPACE=$ws_path
                         
             fi
             ;;

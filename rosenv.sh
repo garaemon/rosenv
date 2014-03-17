@@ -221,7 +221,7 @@ EOF
                     echo switching to $nickname "(rosbuild)"
                     sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
                 fi
-                if [ -f "$sh_path" ]; then
+                if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
 (not yet catkin_make is called?)"
                     sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"

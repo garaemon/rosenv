@@ -333,6 +333,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "is-catkin":"return yes if the workspace is catkin"
             "use":"switch the workspace"
             "update":"update the workspace"
+            "install":"set up a workspace"
         )
         _arguments '*:: :->ocommand'
         if ((CURRENT == 1)); then

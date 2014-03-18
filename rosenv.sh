@@ -37,9 +37,9 @@ rosenv() {
 <rosinstall-file> [<rosinstall-file> <rosinstall-file> ...]"
             echo "       Checkout several repositories speicfied by the"
             echo "       rosinstall files and register that workspace to rosenv."
-            echo "    rosenv get-version <nickname>"
+            echo "    rosenv get-version [<nickname>]"
             echo "       Show the version of the workspace"
-            echo "    rosenv get-path <nickname>"
+            echo "    rosenv get-path [<nickname>]"
             echo "       Get the path of the workspace"
             echo "    rosenv list-nicknames"
             echo "       List all the workspaces's nickname"
@@ -134,9 +134,19 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
 }
 EOF
             ;;
+        "get-nickname")
+            echo $ROSENV_CURRENT
+            ;;
         "get-path")             # internal command
             local nickname
-            nickname=$2
+            if [ $# = 1 ]; then
+                nickname=$ROSENV_CURRENT
+            elif [ $# = 2 ]; then
+                nickname=$2
+            else
+                rosenv help
+                return 2
+            fi
             node <<EOF
 var path = require('path');
 var fs = require('fs');
@@ -150,7 +160,14 @@ EOF
             ;;
         "get-version")             # internal command
             local nickname
-            nickname=$2
+            if [ $# = 1 ]; then
+                nickname=$ROSENV_CURRENT
+            elif [ $# = 2 ]; then
+                nickname=$2
+            else
+                rosenv help
+                return 2
+            fi
             node <<EOF
 var path = require('path');
 var fs = require('fs');
@@ -310,7 +327,7 @@ EOF
 
 catmake() {
     local catkin_pkg
-    if [ -e package.xml ]; then
+    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy -a -e package.xml ]; then
         catkin_pkg=`basename $PWD`
         (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
     else
@@ -327,12 +344,14 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "register":"register a workspace"
             "list":"list of the workspaces"
             "list-nicknames":"only list up the nicknames of the workspaces"
+            "get-nickname":"show current workspace"
             "get-path":"get the path to the workspace"
             "get-version":"get the ROS distro version of the workspace"
             "remove":"remove the workspace"
             "is-catkin":"return yes if the workspace is catkin"
             "use":"switch the workspace"
             "update":"update the workspace"
+            "install":"set up a workspace"
         )
         _arguments '*:: :->ocommand'
         if ((CURRENT == 1)); then

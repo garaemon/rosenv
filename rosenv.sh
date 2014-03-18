@@ -260,6 +260,7 @@ EOF
             # parse argument
             local nickname
             local directory
+            local directory_parent
             local rosinstall_files
             local distro
             local wscmd
@@ -270,15 +271,19 @@ EOF
             fi
             nickname=$2
             directory=$3
+            directory_parent=$3
             distro=$4
             shift; shift; shift; shift;
             while [ $# -gt 0 ]; do
                 case "$1" in
-                    "--rosbuild") wstool=rosws;;
+                    "--rosbuild") wscmd=rosws;;
                     *) rosinstall_files="$1 $rosinstall_files";;
                 esac
                 shift
             done
+            if [ $wscmd = "wstool" ]; then
+                directory=$directory/src
+            fi
             mkdir -p $directory
             (cd $directory && $wscmd init)
             if [ $wscmd = rosws ]; then
@@ -294,13 +299,23 @@ EOF
                     (cd $directory && $wscmd merge $rosinstall_file)
                 fi
             done
-            rosenv register $nickname $directory $distro
+            rosenv register $nickname $directory_parent $distro
             ;;
         *)
             rosenv help
             return 3
             ;;
     esac
+}
+
+catmake() {
+    local catkin_pkg
+    if [ -e package.xml ]; then
+        catkin_pkg=`basename $PWD`
+        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
+    else
+        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@)
+    fi
 }
 
 # completion
@@ -366,23 +381,14 @@ if [ $(basename $SHELL) = "zsh" ]; then
     compdef _rosenv rosenv
 fi
 
-catmake() {
-    local catkin_pkg
-    if [ -e package.xml ]; then
-        catkin_pkg=`basename $PWD`
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
-    else
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@)
-    fi
-}
-
-function _catmake() {
-    local options
-    options="install test clean -h -C --source --build --force-cmake --no-color \
+if [ $(basename $SHELL) = "zsh" ]; then
+    function _catmake() {
+        local options
+        options="install test clean -h -C --source --build --force-cmake --no-color \
 --pkg --only-pkg-with-deps --cmake-args --make-args \
 `rospack list | cut -f1 -d' '`"
-    reply=(${=options})
-}
-
-compctl -K "_catmake" "catmake"
+        reply=(${=options})
+    }
+    compctl -K "_catmake" "catmake"
+fi
 

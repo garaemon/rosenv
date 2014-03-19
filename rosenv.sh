@@ -247,6 +247,11 @@ EOF
                 source $sh_path
                 export ROSENV_CURRENT=$nickname
                 export ROS_WORKSPACE=$ws_path
+                # check rosenv_use_hook is defined or not
+                type rosenv_use_hook > /dev/null
+                if [ $? ]; then
+                    rosenv_use_hook
+                fi
             fi
             ;;
         "update")

@@ -241,12 +241,17 @@ EOF
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
 (not yet catkin_make is called?)"
-                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
-                    echo "automatically source "
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
+                    echo "automatically source $sh_path"
                 fi
                 source $sh_path
                 export ROSENV_CURRENT=$nickname
                 export ROS_WORKSPACE=$ws_path
+                # check rosenv_use_hook is defined or not
+                type rosenv_use_hook > /dev/null
+                if [ $? ]; then
+                    rosenv_use_hook
+                fi
             fi
             ;;
         "update")
@@ -305,6 +310,8 @@ EOF
             (cd $directory && $wscmd init)
             if [ $wscmd = rosws ]; then
                 (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
+            else
+                (cd $directory && catkin_init_workspace)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
@@ -389,7 +396,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 fi
                 ;;
-            "get-path" | "get-version")
+            "get-path" | "get-version" | "is-catkin")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;
@@ -398,10 +405,59 @@ if [ $(basename $SHELL) = "zsh" ]; then
         
     }
     compdef _rosenv rosenv
+elif [ $(basename $SHELL) = "bash" ]; then
+    _rosenv() {
+        arg="${COMP_WORDS[COMP_CWORD]}"
+        COMPREPLY=()
+        # the first argument
+        if [[ $COMP_CWORD == 1 ]]; then
+            COMPREPLY=($(compgen -W "help register list list-nicknames \
+get-nicknames get-path get-version remove is-catkin use update install" \
+                    -- ${arg}))
+        else
+            case ${COMP_WORDS[1]} in
+                register | add)
+                    if [[ $COMP_CWORD == 3 ]]; then
+                        COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
+                    elif [[ $COMP_CWORD == 4 ]]; then
+                        COMPREPLY=($(compgen -W "$(rosenv distros)" -- ${arg}))
+                    fi
+                    ;;
+                # the comemnd which requires only one argument
+                # and which is one of the nicknames
+                get-path | get-version | remove | rm | unregister | is-catkin)
+                    if [[ $COMP_CWORD == 2 ]]; then
+                        COMPREPLY=($(compgen -W "$(rosenv list-nicknames)"\
+                            -- ${arg}))
+                    fi
+                    ;;
+                update)
+                    if [[ $COMP_CWORD == 2 ]]; then
+                        COMPREPLY=($(compgen -W "$(rosenv list-nicknames)"\
+                            -- ${arg}))
+                    fi
+                    ;;
+                use)
+                    COMPREPLY=($(compgen -W "$(rosenv list-nicknames)\
+ --install --devel" -- ${arg}))
+                    ;;
+                install)
+                    if [[ $COMP_CWORD == 3 ]]; then
+                        COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
+                    elif [[ $COMP_CWORD == 4 ]]; then
+                        COMPREPLY=($(compgen -W "$(rosenv distros)" -- ${arg}))
+                    elif [[ $COMP_CWORD -ge 5 ]]; then
+                        COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
+                    fi
+                    ;;
+            esac
+        fi
+    }
+    complete -F "_rosenv" "rosenv"
 fi
 
 if [ $(basename $SHELL) = "zsh" ]; then
-    function _catmake() {
+    _catmake() {
         local options
         options="install test clean -h -C --source --build --force-cmake --no-color \
 --pkg --only-pkg-with-deps --cmake-args --make-args \
@@ -409,5 +465,15 @@ if [ $(basename $SHELL) = "zsh" ]; then
         reply=(${=options})
     }
     compctl -K "_catmake" "catmake"
+elif [ $(basename $SHELL) = "bash" ]; then
+    _catmake() {
+        arg="${COMP_WORDS[COMP_CWORD]}"
+        local options
+        options="install test clean -h -C --source --build --force-cmake --no-color \
+--pkg --only-pkg-with-deps --cmake-args --make-args \
+`rospack list | cut -f1 -d' '`"
+        COMPREPLY=($(compgen -W "$options" -- ${arg}))
+    }
+    complete -F "_catmake" "catmake"
 fi
 

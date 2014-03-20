@@ -241,8 +241,8 @@ EOF
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
 (not yet catkin_make is called?)"
-                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
-                    echo "automatically source "
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
+                    echo "automatically source $sh_path"
                 fi
                 source $sh_path
                 export ROSENV_CURRENT=$nickname
@@ -310,6 +310,8 @@ EOF
             (cd $directory && $wscmd init)
             if [ $wscmd = rosws ]; then
                 (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
+            else
+                (cd $directory && catkin_init_workspace)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
@@ -394,7 +396,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 fi
                 ;;
-            "get-path" | "get-version")
+            "get-path" | "get-version" | "is-catkin")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;

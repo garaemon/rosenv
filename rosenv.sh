@@ -252,6 +252,7 @@ EOF
                 if [ $? ]; then
                     rosenv_use_hook
                 fi
+                rospack profile > /dev/null
             fi
             ;;
         "update")

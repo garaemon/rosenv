@@ -336,9 +336,13 @@ catmake() {
     local catkin_pkg
     if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy -a -e package.xml ]; then
         catkin_pkg=`basename $PWD`
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
+        (cd $(rosenv get-path $ROSENV_CURRENT) &&
+         source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) &&
+         catkin_make $@ --only-pkg-with-deps $catkin_pkg)
     else
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@)
+        (cd $(rosenv get-path $ROSENV_CURRENT) && 
+         source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) &&
+         catkin_make $@)
     fi
 }
 

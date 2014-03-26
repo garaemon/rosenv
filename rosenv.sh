@@ -337,7 +337,8 @@ catmake() {
     local catkin_pkg
     local sh_file
     sh_file=/opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL)
-    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy -a -e package.xml ]; then
+    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy \
+            -a -e package.xml ]; then
         catkin_pkg=`basename $PWD`
         # --only-pkg-with-deps option is provided, use that argument
         if [ `echo $@ | grep -c '--only-pkg-with-deps'` != 0 ]; then

@@ -6,6 +6,16 @@ a script to manage several ROS workspaces
 curl https://raw.github.com/garaemon/rosenv/master/install.sh | bash
 ```
 
+And rosenv requires node.js. The latest stable version is recommended and please use
+nvm.
+```sh
+curl https://raw.github.com/creationix/nvm/v0.3.0/install.sh | sh
+nvm install 0.10
+nvm use 0.10
+```
+
+Please see [nvm](https://github.com/creationix/nvm) for more details.
+
 ## Usage
 Please run `rosenv help` for details.
 ### register a existing workspace

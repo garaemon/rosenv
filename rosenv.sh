@@ -248,8 +248,8 @@ EOF
                 export ROSENV_CURRENT=$nickname
                 export ROS_WORKSPACE=$ws_path
                 # check rosenv_use_hook is defined or not
-                type rosenv_use_hook > /dev/null
-                if [ $? ]; then
+                type rosenv_use_hook 2> /dev/null
+                if [ $? -eq 0 ]; then
                     rosenv_use_hook
                 fi
                 rospack profile > /dev/null

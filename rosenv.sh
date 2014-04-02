@@ -241,17 +241,18 @@ EOF
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
 (not yet catkin_make is called?)"
-                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.`basename $SHELL`"
-                    echo "automatically source "
+                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
+                    echo "automatically source $sh_path"
                 fi
                 source $sh_path
                 export ROSENV_CURRENT=$nickname
                 export ROS_WORKSPACE=$ws_path
                 # check rosenv_use_hook is defined or not
-                type rosenv_use_hook > /dev/null
-                if [ $? ]; then
+                type rosenv_use_hook 2> /dev/null
+                if [ $? -eq 0 ]; then
                     rosenv_use_hook
                 fi
+                rospack profile > /dev/null
             fi
             ;;
         "update")
@@ -310,6 +311,8 @@ EOF
             (cd $directory && $wscmd init)
             if [ $wscmd = rosws ]; then
                 (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
+            else
+                (cd $directory && catkin_init_workspace)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
@@ -332,11 +335,31 @@ EOF
 
 catmake() {
     local catkin_pkg
-    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy -a -e package.xml ]; then
+    local sh_file
+    sh_file=/opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL)
+    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy \
+            -a -e package.xml ]; then
         catkin_pkg=`basename $PWD`
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@ --only-pkg-with-deps $catkin_pkg)
+        # --only-pkg-with-deps option is provided, use that argument
+        if [ `echo $@ | grep -c '\-\-only-pkg-with-deps'` != 0 ]; then
+            (
+                cd $(rosenv get-path $ROSENV_CURRENT) &&
+                source $sh_file &&
+                catkin_make $@
+            )
+        else
+            (
+                cd $(rosenv get-path $ROSENV_CURRENT) &&
+                source $sh_file &&
+                catkin_make $@ --only-pkg-with-deps $catkin_pkg
+            )
+        fi
     else
-        (cd $(rosenv get-path $ROSENV_CURRENT) && source /opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL) && catkin_make $@)
+        (
+            cd $(rosenv get-path $ROSENV_CURRENT) && 
+            source $sh_file &&
+            catkin_make $@
+        )
     fi
 }
 
@@ -414,7 +437,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 fi
                 ;;
-            "get-path" | "get-version")
+            "get-path" | "get-version" | "is-catkin")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;

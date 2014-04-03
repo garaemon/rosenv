@@ -363,6 +363,26 @@ catmake() {
     fi
 }
 
+wsinfo_current_branch() {
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || \
+  ref=$(git rev-parse --short HEAD 2> /dev/null) || return
+  echo ${ref#refs/heads/}
+}
+
+
+wsinfo() {
+    # a function to show the branch information of workspace
+    # only supports git
+    local ws_path
+    ws_path=$(rosenv get-path)
+    dirs=$(find $ws_path -name .git)
+    for d in $(echo $dirs)
+    do
+        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path} '==> ' &&
+         wsinfo_current_branch)
+    done
+}
+
 # completion
 if [ $(basename $SHELL) = "zsh" ]; then
     _rosenv() {

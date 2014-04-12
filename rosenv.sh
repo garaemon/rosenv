@@ -464,6 +464,8 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 elif ((CURRENT == 4)); then
                     _values "distros" $(rosenv distros)
+                elif ((CURRENT == 5)); then
+                    _files
                 fi
                 ;;
             "remove" | "rm" | "unregister")
@@ -514,6 +516,8 @@ get-nicknames get-path get-version remove is-catkin use update install" \
                         COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
                     elif [[ $COMP_CWORD == 4 ]]; then
                         COMPREPLY=($(compgen -W "$(rosenv distros)" -- ${arg}))
+                    if [[ $COMP_CWORD == 5 ]]; then
+                        COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
                     fi
                     ;;
                 # the comemnd which requires only one argument

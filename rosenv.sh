@@ -320,9 +320,17 @@ EOF
                 shift
             done
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs);
+                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                while [ $? != 0 ]; do
+                    sleep 1
+                    (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                done
             else
-                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs);
+                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                while [ $? != 0 ]; do
+                    sleep 1
+                    (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                done
             fi
             ;;
         "install")

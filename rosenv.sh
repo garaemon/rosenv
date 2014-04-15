@@ -15,7 +15,7 @@ rosenv() {
             echo "Usage:"
             echo "    rosenv help"
             echo "       Show this message"
-            echo "    rosenv register|add <nickname> <path> <distro>"
+            echo "    rosenv register|add <nickname> <path> <distro> [<parent-work-space>]"
             echo "       Register an existing ros workspace."
             echo "    rosenv remove|rm|unregister <nickname>"
             echo "       Remove a workspace from rosenv."
@@ -41,6 +41,8 @@ rosenv() {
             echo "       Show the version of the workspace"
             echo "    rosenv get-path [<nickname>]"
             echo "       Get the path of the workspace"
+            echo "    rosenv get-parent-workspace [<nickname>]"
+            echo "       Get the path of the parent workspace"
             echo "    rosenv list-nicknames"
             echo "       List all the workspaces's nickname"
             echo "    rosenv is-catkin <nickname>"
@@ -67,10 +69,16 @@ rosenv() {
             local nickname
             local ws_path
             local version
+            local parent_workspace
             nickname=$2
             ws_path=$3
             version=$4
-            echo "  register $ws_path($version) as $nickname"
+            parent_workspace=$5
+            if [ "$parent_workspace" != "" ]; then
+                echo "  register $ws_path($version) as $nickname with parent $parent_workspace"
+            else
+                echo "  register $ws_path($version) as $nickname"
+            fi
             # use node to read/write json file
             node <<EOF
 var path = require('path');
@@ -84,7 +92,8 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
 }
 config["$nickname"] = {
   path: "$ws_path",
-  version: "$version"
+  version: "$version",
+  parent: "$parent_workspace"
 };
 fs.writeFileSync("$ROSENV_DIR/config.json", JSON.stringify(config, null, 4) + '\n');
 EOF
@@ -94,14 +103,23 @@ EOF
 var path = require('path');
 var fs = require('fs');
 var util = require('util');
+function config_format(config) {
+  if (config.parent) {
+    return util.format('%s (%s) %s <= %s', key, config.version, config.path, config.parent);
+  }
+  else {
+    return util.format('%s (%s) %s', key, config.version, config.path);
+  }
+}
+
 if (fs.existsSync("$ROSENV_DIR/config.json")) {
   config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
   for (var key in config) {
     if (key.toString() == "$ROSENV_CURRENT".toString()) {
-      console.log(util.format('* %s (%s) %s', key, config[key].version, config[key].path));
+      console.log(util.format('* %s', config_format(config[key])));
     }
     else {
-      console.log(util.format('  %s (%s) %s', key, config[key].version, config[key].path));
+      console.log(util.format('  %s', config_format(config[key])));
     }
   }
 }
@@ -136,6 +154,32 @@ EOF
             ;;
         "get-nickname")
             echo $ROSENV_CURRENT
+            ;;
+        "get-parent-workspace")
+            local nickname
+            if [ $# = 1 ]; then
+                nickname=$ROSENV_CURRENT
+            elif [ $# = 2 ]; then
+                nickname=$2
+            else
+                rosenv help
+                return 2
+            fi
+            node <<EOF
+var path = require('path');
+var fs = require('fs');
+if (fs.existsSync("$ROSENV_DIR/config.json")) {
+  config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
+  if (config.hasOwnProperty("$nickname")) {
+    if (config["$nickname"].parent) {
+       console.log(config["$nickname"].parent);
+    }
+    else {
+       console.log('none')
+    }
+  }
+}
+EOF
             ;;
         "get-path")             # internal command
             local nickname
@@ -225,7 +269,6 @@ EOF
                 ws_path=$(rosenv get-path $nickname)
                 if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
                     # catkin
-                    
                     if [ "$installp" = "true" ]; then
                         echo switching to $nickname:install "(catkin)"
                         sh_path=$ws_path/install/setup.`basename $SHELL`
@@ -241,7 +284,11 @@ EOF
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
 (not yet catkin_make is called?)"
-                    sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
+                    if [ "$(rosenv get-parent-workspace $nickname)" = "none" ]; then
+                        sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
+                    else
+                        sh_path="$(rosenv get-parent-workspace $nickname)/setup.$(basename $SHELL)"
+                    fi
                     echo "automatically source $sh_path"
                 fi
                 source $sh_path
@@ -273,9 +320,17 @@ EOF
                 shift
             done
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs);
+                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                while [ $? != 0 ]; do
+                    sleep 1
+                    (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                done
             else
-                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs);
+                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                while [ $? != 0 ]; do
+                    sleep 1
+                    (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                done
             fi
             ;;
         "install")
@@ -336,7 +391,11 @@ EOF
 catmake() {
     local catkin_pkg
     local sh_file
-    sh_file=/opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL)
+    if [ "$(rosenv get-parent-workspace)" = "none" ]; then
+        sh_file=/opt/ros/$(rosenv get-version $ROSENV_CURRENT)/setup.$(basename $SHELL)
+    else
+        sh_file=$(rosenv get-parent-workspace)/setup.$(basename $SHELL)
+    fi
     if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy \
             -a -e package.xml ]; then
         catkin_pkg=`basename $PWD`
@@ -394,6 +453,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "list-nicknames":"only list up the nicknames of the workspaces"
             "get-nickname":"show current workspace"
             "get-path":"get the path to the workspace"
+            "get-parent-workspace":"get the parent workspace path. if not specified, returns none"
             "get-version":"get the ROS distro version of the workspace"
             "remove":"remove the workspace"
             "is-catkin":"return yes if the workspace is catkin"
@@ -412,6 +472,8 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 elif ((CURRENT == 4)); then
                     _values "distros" $(rosenv distros)
+                elif ((CURRENT == 5)); then
+                    _files
                 fi
                 ;;
             "remove" | "rm" | "unregister")
@@ -437,7 +499,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _files
                 fi
                 ;;
-            "get-path" | "get-version" | "is-catkin")
+            "get-path" | "get-version" | "is-catkin" | "get-parent-workspace")
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;
@@ -462,11 +524,13 @@ get-nicknames get-path get-version remove is-catkin use update install" \
                         COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
                     elif [[ $COMP_CWORD == 4 ]]; then
                         COMPREPLY=($(compgen -W "$(rosenv distros)" -- ${arg}))
+                    elif [[ $COMP_CWORD == 5 ]]; then
+                        COMPREPLY=($(compgen -o filenames -A file -- ${arg}))
                     fi
                     ;;
                 # the comemnd which requires only one argument
                 # and which is one of the nicknames
-                get-path | get-version | remove | rm | unregister | is-catkin)
+                get-path | get-version | remove | rm | unregister | is-catkin | get-parent-workspace)
                     if [[ $COMP_CWORD == 2 ]]; then
                         COMPREPLY=($(compgen -W "$(rosenv list-nicknames)"\
                             -- ${arg}))

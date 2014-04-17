@@ -116,7 +116,7 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
   config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
   for (var key in config) {
     if (key.toString() == "$ROSENV_CURRENT".toString()) {
-      console.log(util.format('* %s', config_format(config[key])));
+      console.log(util.format('\u001b[36m* %s\u001b[m', config_format(config[key])));
     }
     else {
       console.log(util.format('  %s', config_format(config[key])));

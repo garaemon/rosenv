@@ -270,15 +270,15 @@ EOF
                 if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
                     # catkin
                     if [ "$installp" = "true" ]; then
-                        echo switching to $nickname:install "(catkin)"
+                        echo -e "\e[36mswitching to $nickname:install (catkin)\e[m"
                         sh_path=$ws_path/install/setup.`basename $SHELL`
                     else
-                        echo switching to $nickname:devel "(catkin)"
+                        echo -e "\e[36mswitching to $nickname:devel (catkin)\e[m"
                         sh_path=$ws_path/devel/setup.`basename $SHELL`
                     fi
                 else
                     # rosbuild
-                    echo switching to $nickname "(rosbuild)"
+                    echo -e "\e[36mswitching to $nickname (rosbuild)\e[m"
                     sh_path=$ws_path/setup.`basename $SHELL`
                 fi
                 if [ ! -e "$sh_path" ]; then

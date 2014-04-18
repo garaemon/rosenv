@@ -396,30 +396,11 @@ catmake() {
     else
         sh_file=$(rosenv get-parent-workspace)/setup.$(basename $SHELL)
     fi
-    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy \
-            -a -e package.xml ]; then
-        catkin_pkg=`basename $PWD`
-        # --only-pkg-with-deps option is provided, use that argument
-        if [ `echo $@ | grep -c '\-\-only-pkg-with-deps'` != 0 ]; then
-            (
-                cd $(rosenv get-path $ROSENV_CURRENT) &&
-                source $sh_file &&
-                catkin_make $@
-            )
-        else
-            (
-                cd $(rosenv get-path $ROSENV_CURRENT) &&
-                source $sh_file &&
-                catkin_make $@ --only-pkg-with-deps $catkin_pkg
-            )
-        fi
-    else
-        (
-            cd $(rosenv get-path $ROSENV_CURRENT) && 
-            source $sh_file &&
-            catkin_make $@
-        )
-    fi
+    (
+        cd $(rosenv get-path $ROSENV_CURRENT) && 
+        source $sh_file &&
+        catkin_make $@
+    )
 }
 
 wsinfo_current_branch() {

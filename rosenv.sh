@@ -426,7 +426,7 @@ wsinfo() {
     dirs=$(find $ws_path -name .git)
     for d in $(echo $dirs)
     do
-        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path} '==> ' &&
+        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path/} '==> ' &&
          wsinfo_current_branch)
     done
 }

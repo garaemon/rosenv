@@ -116,7 +116,7 @@ if (fs.existsSync("$ROSENV_DIR/config.json")) {
   config = JSON.parse(fs.readFileSync("$ROSENV_DIR/config.json", "utf-8"));
   for (var key in config) {
     if (key.toString() == "$ROSENV_CURRENT".toString()) {
-      console.log(util.format('* %s', config_format(config[key])));
+      console.log(util.format('\u001b[36m* %s\u001b[m', config_format(config[key])));
     }
     else {
       console.log(util.format('  %s', config_format(config[key])));
@@ -270,15 +270,15 @@ EOF
                 if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
                     # catkin
                     if [ "$installp" = "true" ]; then
-                        echo switching to $nickname:install "(catkin)"
+                        echo -e "\e[36mswitching to $nickname:install (catkin)\e[m"
                         sh_path=$ws_path/install/setup.`basename $SHELL`
                     else
-                        echo switching to $nickname:devel "(catkin)"
+                        echo -e "\e[36mswitching to $nickname:devel (catkin)\e[m"
                         sh_path=$ws_path/devel/setup.`basename $SHELL`
                     fi
                 else
                     # rosbuild
-                    echo switching to $nickname "(rosbuild)"
+                    echo -e "\e[36mswitching to $nickname (rosbuild)\e[m"
                     sh_path=$ws_path/setup.`basename $SHELL`
                 fi
                 if [ ! -e "$sh_path" ]; then
@@ -396,30 +396,11 @@ catmake() {
     else
         sh_file=$(rosenv get-parent-workspace)/setup.$(basename $SHELL)
     fi
-    if [ "$(rosenv get-version $ROSENV_CURRENT)" != groovy \
-            -a -e package.xml ]; then
-        catkin_pkg=`basename $PWD`
-        # --only-pkg-with-deps option is provided, use that argument
-        if [ `echo $@ | grep -c '\-\-only-pkg-with-deps'` != 0 ]; then
-            (
-                cd $(rosenv get-path $ROSENV_CURRENT) &&
-                source $sh_file &&
-                catkin_make $@
-            )
-        else
-            (
-                cd $(rosenv get-path $ROSENV_CURRENT) &&
-                source $sh_file &&
-                catkin_make $@ --only-pkg-with-deps $catkin_pkg
-            )
-        fi
-    else
-        (
-            cd $(rosenv get-path $ROSENV_CURRENT) && 
-            source $sh_file &&
-            catkin_make $@
-        )
-    fi
+    (
+        cd $(rosenv get-path $ROSENV_CURRENT) && 
+        source $sh_file &&
+        catkin_make $@
+    )
 }
 
 wsinfo_current_branch() {

@@ -409,7 +409,8 @@ wsinfo_current_branch() {
   branch=${ref#refs/heads/}
   if [ "$branch" = "master" -o \
       "$branch" = "hydro-devel" -o \
-      "$branch" = "groovy-devel" ]; then
+      "$branch" = "groovy-devel" -o \
+      "$branch" = "indigo-devel" ]; then
       echo $branch
   else
       echo -e "\e[1;31m $branch \e[m"

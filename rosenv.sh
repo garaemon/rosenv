@@ -299,7 +299,7 @@ EOF
                 if [ $? -eq 0 ]; then
                     rosenv_use_hook
                 fi
-                rospack profile > /dev/null
+                #rospack profile > /dev/null
             fi
             ;;
         "update")
@@ -582,3 +582,11 @@ elif [ $(basename $SHELL) = "bash" ]; then
     complete -F "_catmake" "catmake"
 fi
 
+if [ $(basename $SHELL) = "zsh" ]; then
+    _catclean() {
+        local options
+        options="$(rospack list | cut -f1 -d' ')"
+        reply=(${=options})
+    }
+    compctl -K "_catclean" "catclean"
+fi

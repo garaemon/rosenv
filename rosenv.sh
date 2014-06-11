@@ -406,7 +406,15 @@ catmake() {
 wsinfo_current_branch() {
   ref=$(git symbolic-ref HEAD 2> /dev/null) || \
   ref=$(git rev-parse --short HEAD 2> /dev/null) || return
-  echo ${ref#refs/heads/}
+  branch=${ref#refs/heads/}
+  if [ "$branch" = "master" -o \
+      "$branch" = "hydro-devel" -o \
+      "$branch" = "groovy-devel" -o \
+      "$branch" = "indigo-devel" ]; then
+      echo $branch
+  else
+      echo -e "\e[1;31m $branch \e[m"
+  fi
 }
 
 
@@ -418,7 +426,7 @@ wsinfo() {
     dirs=$(find $ws_path -name .git)
     for d in $(echo $dirs)
     do
-        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path} '==> ' &&
+        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path/} '==> ' &&
          wsinfo_current_branch)
     done
 }

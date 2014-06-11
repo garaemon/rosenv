@@ -417,6 +417,17 @@ wsinfo_current_branch() {
   fi
 }
 
+# only zsh
+catclean() {
+    local ws_path
+    local pkg_path
+    local build_path
+    ws_path=$(rosenv get-path)
+    pkg_path=$(rospack find $1)
+    build_path=${ws_path}/build/${pkg_path#$ws_path/src/}
+    echo -e "\e[1;31m cleaning ${build_path} \e[m"
+    rm -rf ${build_path}
+}
 
 wsinfo() {
     # a function to show the branch information of workspace
@@ -430,7 +441,7 @@ wsinfo() {
          wsinfo_current_branch)
     done
 }
-
+        
 # completion
 if [ $(basename $SHELL) = "zsh" ]; then
     _rosenv() {

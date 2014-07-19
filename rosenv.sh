@@ -253,7 +253,7 @@ EOF
             nickname=$ROSENV_CURRENT
             shift               # dispose 'use' argument
             while [ $# -gt 0 ]; do
-                case "$1" in 
+                case "$1" in
                     "--install") installp=true;;
                     "--devel") develp=true;;
                     *) nickname=$1;;
@@ -320,16 +320,16 @@ EOF
                 shift
             done
             if [ "$(rosenv is-catkin $nickname)" = "yes" ] ; then
-                (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                (cd $(rosenv get-path $nickname)/src > /dev/null && rosenv use $nickname && wstool update $pjobs)
                 while [ $? != 0 ]; do
                     sleep 1
-                    (cd $(rosenv get-path $nickname)/src && rosenv use $nickname && wstool update $pjobs)
+                    (cd $(rosenv get-path $nickname)/src > /dev/null && rosenv use $nickname && wstool update $pjobs)
                 done
             else
-                (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                (cd $(rosenv get-path $nickname) > /dev/null && rosenv use $nickname && rosws update $pjobs)
                 while [ $? != 0 ]; do
                     sleep 1
-                    (cd $(rosenv get-path $nickname) && rosenv use $nickname && rosws update $pjobs)
+                    (cd $(rosenv get-path $nickname) > /dev/null && rosenv use $nickname && rosws update $pjobs)
                 done
             fi
             ;;
@@ -363,20 +363,20 @@ EOF
                 directory=$directory/src
             fi
             mkdir -p $directory
-            (cd $directory && $wscmd init)
+            (cd $directory > /dev/null && $wscmd init)
             if [ $wscmd = rosws ]; then
-                (cd $directory && $wscmd merge /opt/ros/$distro/.rosinstall)
+                (cd $directory > /dev/null && $wscmd merge /opt/ros/$distro/.rosinstall)
             else
-                (cd $directory && catkin_init_workspace)
+                (cd $directory > /dev/null && catkin_init_workspace)
             fi
             for rosinstall_file in `echo $rosinstall_files`
             do
                 if [ -e $rosinstall_file ]; then
                     local abspath
-                    abspath=$(cd $(dirname $rosinstall_file) && pwd)/$(basename $rosinstall_file)
-                    (cd $directory && $wscmd merge file://$abspath)
+                    abspath=$(cd $(dirname $rosinstall_file) > /dev/null && pwd)/$(basename $rosinstall_file)
+                    (cd $directory > /dev/null && $wscmd merge file://$abspath)
                 else
-                    (cd $directory && $wscmd merge $rosinstall_file)
+                    (cd $directory > /dev/null && $wscmd merge $rosinstall_file)
                 fi
             done
             rosenv register $nickname $directory_parent $distro
@@ -397,7 +397,7 @@ catmake() {
         sh_file=$(rosenv get-parent-workspace)/setup.$(basename $SHELL)
     fi
     (
-        cd $(rosenv get-path $ROSENV_CURRENT) && 
+        cd $(rosenv get-path $ROSENV_CURRENT) > /dev/null &&
         source $sh_file &&
         catkin_make $@
     )
@@ -437,11 +437,11 @@ wsinfo() {
     dirs=$(find $ws_path -name .git)
     for d in $(echo $dirs)
     do
-        (cd $(dirname $d) && echo -n ${$(dirname $d)#$ws_path/} '==> ' &&
+        (cd $(dirname $d) > /dev/null && echo -n ${$(dirname $d)#$ws_path/} '==> ' &&
          wsinfo_current_branch)
     done
 }
-        
+
 # completion
 if [ $(basename $SHELL) = "zsh" ]; then
     _rosenv() {
@@ -503,9 +503,9 @@ if [ $(basename $SHELL) = "zsh" ]; then
                 _command_args=$(rosenv list-nicknames)
                 _values "args" `echo $_command_args`
                 ;;
-            
+
         esac
-        
+
     }
     compdef _rosenv rosenv
 elif [ $(basename $SHELL) = "bash" ]; then

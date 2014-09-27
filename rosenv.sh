@@ -425,8 +425,14 @@ catclean() {
     ws_path=$(rosenv get-path)
     pkg_path=$(rospack find $1)
     build_path=${ws_path}/build/${pkg_path#$ws_path/src/}
-    echo -e "\e[1;31m cleaning ${build_path} \e[m"
-    rm -rf ${build_path}
+    devel_share_path=${ws_path}/devel/share/${pkg_path#$ws_path/src/}
+    devel_lib_path=${ws_path}/devel/lib/${pkg_path#$ws_path/src/}
+    devel_install_path=${ws_path}/devel/install/${pkg_path#$ws_path/src/}
+    echo -e "\e[1;31m cleaning ${build_path}\e[m"
+    echo -e "\e[1;31m cleaning ${devel_share_path}\e[m"
+    echo -e "\e[1;31m cleaning ${devel_lib_path}\e[m"
+    echo -e "\e[1;31m cleaning ${devel_install_path}\e[m"
+    rm -rf ${build_path} ${devel_share_path} ${devel_lib_path} ${devel_install_path}
 }
 
 wsinfo() {

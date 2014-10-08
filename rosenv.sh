@@ -399,6 +399,7 @@ catmake() {
     (
         cd $(rosenv get-path $ROSENV_CURRENT) > /dev/null &&
         source $sh_file &&
+        echo ++ catkin_make $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
         catkin_make $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
     )
 }

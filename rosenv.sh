@@ -241,7 +241,7 @@ EOF
             local nickname
             nickname=$2
             ws_path=$(rosenv get-path $nickname)
-            if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
+            if [ -e $ws_path/src ]; then
                 echo yes
             fi
             ;;
@@ -267,7 +267,7 @@ EOF
                 local ws_path
                 local sh_path
                 ws_path=$(rosenv get-path $nickname)
-                if [ -e $ws_path/src -a -e $ws_path/src/CMakeLists.txt ]; then
+                if [ -e $ws_path/src ]; then
                     # catkin
                     if [ "$installp" = "true" ]; then
                         echo -e "\e[36mswitching to $nickname:install (catkin)\e[m"
@@ -283,7 +283,7 @@ EOF
                 fi
                 if [ ! -e "$sh_path" ]; then
                     echo "$sh_path is not yet available. \
-(not yet catkin_make is called?)"
+(not yet catkin build is called?)"
                     if [ "$(rosenv get-parent-workspace $nickname)" = "none" ]; then
                         sh_path="/opt/ros/$(rosenv get-version $nickname)/setup.$(basename $SHELL)"
                     else

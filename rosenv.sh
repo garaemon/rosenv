@@ -401,7 +401,12 @@ catmake() {
         source $sh_file &&
         echo ++ catkin build $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
         catkin build $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        rosenv use
     )
+}
+
+catmakeone() {
+    catmake $@ --start-with $@
 }
 
 wsinfo_current_branch() {
@@ -571,12 +576,17 @@ fi
 if [ $(basename $SHELL) = "zsh" ]; then
     _catmake() {
         local options
-        options="install test clean -h -C --source --build --force-cmake --no-color \
---pkg --only-pkg-with-deps --cmake-args --make-args \
+        options="build --force-cmake --start-with --cmake-args --make-args \
 `rospack list | cut -f1 -d' '`"
         reply=(${=options})
     }
     compctl -K "_catmake" "catmake"
+    _catmakeone() {
+        local options
+        options="`rospack list | cut -f1 -d' '`"
+        reply=(${=options})
+    }
+    compctl -K "_catmakeone" "catmakeone"
 elif [ $(basename $SHELL) = "bash" ]; then
     _catmake() {
         arg="${COMP_WORDS[COMP_CWORD]}"

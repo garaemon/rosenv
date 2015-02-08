@@ -401,8 +401,8 @@ catmake() {
         source $sh_file &&
         echo ++ catkin build $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
         catkin build $@ -DCMAKE_BUILD_TYPE=RelWithDebInfo
-        rosenv use
     )
+    rosenv use
 }
 
 catmakeone() {

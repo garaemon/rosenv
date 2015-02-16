@@ -245,6 +245,21 @@ EOF
                 echo yes
             fi
             ;;
+        "packages")
+            # list up all the packages which includes package does not compiled
+            # yet even-when you use catkin-tools
+            local packages
+            local package_xmls
+            ws_path=$(rosenv get-path $nickname)
+            package_xmls=$(find $ws_path -name package.xml)
+            for package_xml in $(echo $package_xmls)
+            do
+                package_dir=$(dirname $package_xml)
+                if [ ! -e $package_dir/CATKIN_IGNORE ]; then
+                    echo $(basename $package_dir)
+                fi
+            done
+            ;;
         "use")
             local nickname
             local develp
@@ -472,6 +487,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
             "use":"switch the workspace"
             "update":"update the workspace"
             "install":"set up a workspace"
+            "packages":"list all the packeges in workspace"
         )
         _arguments '*:: :->ocommand'
         if ((CURRENT == 1)); then
@@ -493,7 +509,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
                     _values "workspaces" $(rosenv list-nicknames)
                 fi
                 ;;
-            "list")
+            "list" | "packages")
                 # do nothing
                 ;;
             "use")
@@ -527,7 +543,7 @@ elif [ $(basename $SHELL) = "bash" ]; then
         # the first argument
         if [[ $COMP_CWORD == 1 ]]; then
             COMPREPLY=($(compgen -W "help register list list-nicknames \
-get-nicknames get-path get-version remove is-catkin use update install" \
+get-nicknames get-path get-version remove is-catkin use update install packages" \
                     -- ${arg}))
         else
             case ${COMP_WORDS[1]} in
@@ -577,7 +593,7 @@ if [ $(basename $SHELL) = "zsh" ]; then
     _catmake() {
         local options
         options="build --force-cmake --start-with --cmake-args --make-args \
-`rospack list | cut -f1 -d' '`"
+`rosenv packages | cut -f1 -d' '`"
         reply=(${=options})
     }
     compctl -K "_catmake" "catmake"

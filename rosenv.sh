@@ -251,14 +251,9 @@ EOF
             local packages
             local package_xmls
             ws_path=$(rosenv get-path $nickname)
-            package_xmls=$(find $ws_path -name package.xml)
-            for package_xml in $(echo $package_xmls)
-            do
-                package_dir=$(dirname $package_xml)
-                if [ ! -e $package_dir/CATKIN_IGNORE ]; then
-                    echo $(basename $package_dir)
-                fi
-            done
+            package_xmls=$(find $ws_path -name package.xml -prune |
+                xargs -n 1 dirname | xargs -n 1 basename)
+            echo $package_xmls
             ;;
         "use")
             local nickname

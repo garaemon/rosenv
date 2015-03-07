@@ -440,10 +440,10 @@ catclean() {
     local build_path
     ws_path=$(rosenv get-path)
     pkg_path=$(rospack find $1)
-    build_path=${ws_path}/build/${pkg_path#$ws_path/src/}
-    devel_share_path=${ws_path}/devel/share/${pkg_path#$ws_path/src/}
-    devel_lib_path=${ws_path}/devel/lib/${pkg_path#$ws_path/src/}
-    devel_install_path=${ws_path}/devel/install/${pkg_path#$ws_path/src/}
+    build_path=${ws_path}/build/$1
+    devel_share_path=${ws_path}/devel/share/$1
+    devel_lib_path=${ws_path}/devel/lib/$1
+    devel_install_path=${ws_path}/devel/install/$1
     echo -e "\e[1;31m cleaning ${build_path}\e[m"
     echo -e "\e[1;31m cleaning ${devel_share_path}\e[m"
     echo -e "\e[1;31m cleaning ${devel_lib_path}\e[m"

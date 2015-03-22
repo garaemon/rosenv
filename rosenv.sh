@@ -251,7 +251,7 @@ EOF
             local packages
             local package_xmls
             ws_path=$(rosenv get-path $nickname)
-            package_xmls=$(find $ws_path -name package.xml -prune |
+            package_xmls=$(find $ws_path/src -name package.xml -prune |
                 xargs -n 1 dirname | xargs -n 1 basename)
             echo $package_xmls
             ;;

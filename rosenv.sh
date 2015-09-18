@@ -444,11 +444,13 @@ catclean() {
     devel_share_path=${ws_path}/devel/share/$1
     devel_lib_path=${ws_path}/devel/lib/$1
     devel_install_path=${ws_path}/devel/install/$1
+    python_path=${ws_path}/devel/lib/python2.7/dist-packages/$1
     echo -e "\e[1;31m cleaning ${build_path}\e[m"
     echo -e "\e[1;31m cleaning ${devel_share_path}\e[m"
     echo -e "\e[1;31m cleaning ${devel_lib_path}\e[m"
     echo -e "\e[1;31m cleaning ${devel_install_path}\e[m"
-    rm -rf ${build_path} ${devel_share_path} ${devel_lib_path} ${devel_install_path}
+    echo -e "\e[1;31m cleaning ${python_path}\e[m"
+    rm -rf ${build_path} ${devel_share_path} ${devel_lib_path} ${devel_install_path} ${python_path}
 }
 
 wsinfo() {
